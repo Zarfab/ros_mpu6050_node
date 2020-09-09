@@ -27,11 +27,7 @@
 
 #define MPU_FRAMEID "base_imu"
 
-//#include "AccelGyroSensorOffsets.h"
-
-ros::Publisher imu_calib_pub;
-
-ros::ServiceClient * clientptr;
+#define SENSORS_DPS_TO_RADS               (0.017453293F)          /**< Degrees/s to rad/s multiplier */
 
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
@@ -39,40 +35,6 @@ ros::ServiceClient * clientptr;
 // AD0 high = 0x69
 MPU6050 mpu;
 
-// uncomment "OUTPUT_READABLE_QUATERNION" if you want to see the actual
-// quaternion components in a [w, x, y, z] format (not best for parsing
-// on a remote host such as Processing or something though)
-//#define OUTPUT_READABLE_QUATERNION
-
-// uncomment "OUTPUT_READABLE_EULER" if you want to see Euler angles
-// (in degrees) calculated from the quaternions coming from the FIFO.
-// Note that Euler angles suffer from gimbal lock (for more info, see
-// http://en.wikipedia.org/wiki/Gimbal_lock)
-//#define OUTPUT_READABLE_EULER
-
-// uncomment "OUTPUT_READABLE_YAWPITCHROLL" if you want to see the yaw/
-// pitch/roll angles (in degrees) calculated from the quaternions coming
-// from the FIFO. Note this also requires gravity vector calculations.
-// Also note that yaw/pitch/roll angles suffer from gimbal lock (for
-// more info, see: http://en.wikipedia.org/wiki/Gimbal_lock)
-#define OUTPUT_READABLE_YAWPITCHROLL
-
-// uncomment "OUTPUT_READABLE_REALACCEL" if you want to see acceleration
-// components with gravity removed. This acceleration reference frame is
-// not compensated for orientation, so +X is always +X according to the
-// sensor, just without the effects of gravity. If you want acceleration
-// compensated for orientation, us OUTPUT_READABLE_WORLDACCEL instead.
-#define OUTPUT_READABLE_REALACCEL
-
-// uncomment "OUTPUT_READABLE_WORLDACCEL" if you want to see acceleration
-// components with gravity removed and adjusted for the world frame of
-// reference (yaw is relative to initial orientation, since no magnetometer
-// is present in this case). Could be quite handy in some cases.
-//#define OUTPUT_READABLE_WORLDACCEL
-
-// uncomment "OUTPUT_TEAPOT" if you want output that matches the
-// format used for the InvenSense teapot demo
-//#define OUTPUT_TEAPOT
 
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
@@ -85,19 +47,25 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
 VectorInt16 aa;         // [x, y, z]            accel sensor measurements
-VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
-VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
-VectorFloat gravity;    // [x, y, z]            gravity vector
-float euler[3];         // [psi, theta, phi]    Euler angle container
-float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+VectorInt16 gg;         // [x, y, z]            gyro sensor measurments
+
 
 int sample_rate;
 std::string frame_id;
-//ros::NodeHandle pn;
-//ros::NodeHandle n;
 
 // mpu offsets
 int ax, ay, az, gx, gy, gz;
+
+// float gyro_scale = 1;
+// if (gyro_range == MPU6050_RANGE_250_DEG)
+// gyro_scale = 131;
+// if (gyro_range == MPU6050_RANGE_500_DEG)
+// gyro_scale = 65.5;
+// if (gyro_range == MPU6050_RANGE_1000_DEG)
+// gyro_scale = 32.8;
+// if (gyro_range == MPU6050_RANGE_2000_DEG)
+// gyro_scale = 16.4;
+float gyro_scale = 131;
 
 bool debug = false;
 
@@ -109,8 +77,6 @@ double angular_velocity_covariance, pitch_roll_covariance, yaw_covariance, linea
 double linear_acceleration_stdev_, angular_velocity_stdev_, yaw_stdev_, pitch_roll_stdev_;
 
 ros::Publisher imu_pub;
-ros::Publisher imu_euler_pub;
-ros::Publisher mag_pub;
 
 void mySigintHandler(int sig){
 	ROS_INFO("Shutting down mpu6050_node...");
@@ -136,14 +102,6 @@ void loop(ros::NodeHandle pn, ros::NodeHandle n) {
 	sensor_msgs::Imu imu_msg;
     imu_msg.header.stamp = now;
     imu_msg.header.frame_id = frame_id;
-
-    geometry_msgs::Vector3Stamped imu_euler_msg;
-    imu_euler_msg.header.stamp = now;
-    imu_euler_msg.header.frame_id = frame_id;
-
-    geometry_msgs::Vector3Stamped mag_msg;
-    mag_msg.header.stamp = now;
-    mag_msg.header.frame_id = frame_id;
 
     // http://www.i2cdevlib.com/forums/topic/4-understanding-raw-values-of-accelerometer-and-gyrometer/
 	//The output scale for any setting is [-32768, +32767] for each of the six axes.
@@ -193,72 +151,25 @@ void loop(ros::NodeHandle pn, ros::NodeHandle n) {
 		imu_msg.orientation_covariance[0] = pitch_roll_covariance;
 		imu_msg.orientation_covariance[4] = pitch_roll_covariance;
 		imu_msg.orientation_covariance[8] = yaw_covariance;
-
-//        #ifdef OUTPUT_READABLE_EULER
-//            // display Euler angles in degrees
-//            mpu.dmpGetQuaternion(&q, fifoBuffer);
-//            mpu.dmpGetEuler(euler, &q);
-		//		imu_euler_msg.vector.y=-mpu.fusedEuler[VEC3_Y]*RAD_TO_DEGREE;
-		//		imu_euler_msg.vector.x=mpu.fusedEuler[VEC3_X]*RAD_TO_DEGREE;
-		//		imu_euler_msg.vector.z=-mpu.fusedEuler[VEC3_Z]*RAD_TO_DEGREE;
-		//		imu_euler_pub.publish(imu_euler_msg);
-//            if(debug) printf("euler %7.2f %7.2f %7.2f    ", euler[0] * 180/M_PI, euler[1] * 180/M_PI, euler[2] * 180/M_PI);
-//        #endif
-
-		// http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html
+        
+        // http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html
 		// Accelerations should be in m/s^2 (not in g's), and rotational velocity should be in rad/sec
+        // see also https://answers.ros.org/question/200480/imu-message-definition/
+        mpu.dmpGetAccel(&aa, fifoBuffer);
+        imu_msg.linear_acceleration.x = aa.x * 1/16384. * 9.80665;
+        imu_msg.linear_acceleration.y = aa.y * 1/16384. * 9.80665;
+        imu_msg.linear_acceleration.z = aa.z * 1/16384. * 9.80665;
 
-        #ifdef OUTPUT_READABLE_YAWPITCHROLL
-            // display Euler angles in degrees
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-
-            // Should be in rad/sec.
-            imu_msg.angular_velocity.x = ypr[2];
-            imu_msg.angular_velocity.y = ypr[1];
-            imu_msg.angular_velocity.z = ypr[0];
-
-            if(debug) printf("ypr (degrees)  %7.2f %7.2f %7.2f    ", ypr[0] * 180/M_PI, ypr[1] * 180/M_PI, ypr[2] * 180/M_PI);
-        #endif
-
-        #ifdef OUTPUT_READABLE_REALACCEL
-            // display real acceleration, adjusted to remove gravity
-            // https://github.com/jrowberg/i2cdevlib/blob/master/Arduino/MPU6050/MPU6050_6Axis_MotionApps20.h
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetAccel(&aa, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-
-            // By default, accel is in arbitrary units with a scale of 16384/1g.
-            // Per http://www.ros.org/reps/rep-0103.html
-            // and http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html
-            // should be in m/s^2.
-            // 1g = 9.80665 m/s^2, so we go arbitrary -> g -> m/s^s
-            imu_msg.linear_acceleration.x = aaReal.x * 1/16384. * 9.80665;
-            imu_msg.linear_acceleration.y = aaReal.y * 1/16384. * 9.80665;
-            imu_msg.linear_acceleration.z = aaReal.z * 1/16384. * 9.80665;
-
-            if(debug) printf("areal (raw) %6d %6d %6d    ", aaReal.x, aaReal.y, aaReal.z);
-            if(debug) printf("areal (m/s^2) %6d %6d %6d    ", imu_msg.linear_acceleration.x, imu_msg.linear_acceleration.y, imu_msg.linear_acceleration.z);
-        #endif
+        if(debug) printf("areal (raw) %6d %6d %6d    ", aa.x, aa.y, aa.z);
+        if(debug) printf("areal (m/s^2) %6d %6d %6d    ", imu_msg.linear_acceleration.x, imu_msg.linear_acceleration.y, imu_msg.linear_acceleration.z);
+        
+        mpu.dmpGetGyro(&gg, fifoBuffer)
+        // Should be in rad/sec.
+        imu_msg.angular_velocity.x = float(gg.x) / gyro_scale * SENSORS_DPS_TO_RADS;
+        imu_msg.angular_velocity.y = float(gg.y) / gyro_scale * SENSORS_DPS_TO_RADS;
+        imu_msg.angular_velocity.z = float(gg.z) / gyro_scale * SENSORS_DPS_TO_RADS;
 
 		imu_pub.publish(imu_msg);
-
-//            mag_msg.vector.x=mpu.calibratedMag[VEC3_X];
-//            mag_msg.vector.y=mpu.calibratedMag[VEC3_Y];
-//            mag_msg.vector.z=mpu.calibratedMag[VEC3_Z];
-//            mag_pub.publish(mag_msg);
-
-//        #ifdef OUTPUT_READABLE_WORLDACCEL
-//            // display initial world-frame acceleration, adjusted to remove gravity
-//            // and rotated based on known orientation from quaternion
-//            mpu.dmpGetQuaternion(&q, fifoBuffer);
-//            mpu.dmpGetAccel(&aa, fifoBuffer);
-//            mpu.dmpGetGravity(&gravity, &q);
-//            mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-//            if(debug) printf("aworld %6d %6d %6d    ", aaWorld.x, aaWorld.y, aaWorld.z);
-//        #endif
 
 		if(debug) printf("\n");
     }
@@ -383,8 +294,6 @@ int main(int argc, char **argv){
     usleep(100000);
 
     imu_pub = n.advertise<sensor_msgs::Imu>("imu/data", 10);
-    imu_euler_pub = n.advertise<geometry_msgs::Vector3Stamped>("imu/euler", 10);
-	mag_pub = n.advertise<geometry_msgs::Vector3Stamped>("imu/mag", 10);
 
     ros::Rate r(sample_rate);
     while(ros::ok()){
