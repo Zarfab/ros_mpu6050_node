@@ -169,9 +169,9 @@ void loop(ros::NodeHandle pn, ros::NodeHandle n) {
 		// Accelerations should be in m/s^2 (not in g's), and rotational velocity should be in rad/sec
         // see also https://answers.ros.org/question/200480/imu-message-definition/
         mpu.dmpGetAccel(&aa, fifoBuffer);
-        imu_msg.linear_acceleration.x = aa.x / accel_scale * SENSORS_G_TO_MS2;
-        imu_msg.linear_acceleration.y = aa.y / accel_scale * SENSORS_G_TO_MS2;
-        imu_msg.linear_acceleration.z = aa.z / accel_scale * SENSORS_G_TO_MS2;
+        imu_msg.linear_acceleration.x = aa.x / (accel_scale / 2) * SENSORS_G_TO_MS2;
+        imu_msg.linear_acceleration.y = aa.y / (accel_scale / 2) * SENSORS_G_TO_MS2;
+        imu_msg.linear_acceleration.z = aa.z / (accel_scale / 2) * SENSORS_G_TO_MS2;
 
         if(debug) printf("areal (raw) %6d %6d %6d    ", aa.x, aa.y, aa.z);
         if(debug) printf("areal (m/s^2) %6d %6d %6d    ", imu_msg.linear_acceleration.x, imu_msg.linear_acceleration.y, imu_msg.linear_acceleration.z);
