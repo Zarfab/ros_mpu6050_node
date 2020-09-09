@@ -262,6 +262,9 @@ int main(int argc, char **argv){
     // load and configure the DMP
     printf("Initializing DMP...\n");
     devStatus = mpu.dmpInitialize();
+    // just to be sure of the values
+    mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_250);
+    mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
 
     // Set accel offsets.
     std::cout << "Setting X accel offset: " << ax << std::endl;
