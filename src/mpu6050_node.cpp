@@ -163,7 +163,7 @@ void loop(ros::NodeHandle pn, ros::NodeHandle n) {
         if(debug) printf("areal (raw) %6d %6d %6d    ", aa.x, aa.y, aa.z);
         if(debug) printf("areal (m/s^2) %6d %6d %6d    ", imu_msg.linear_acceleration.x, imu_msg.linear_acceleration.y, imu_msg.linear_acceleration.z);
         
-        mpu.dmpGetGyro(&gg, fifoBuffer)
+        mpu.dmpGetGyro(&gg, fifoBuffer);
         // Should be in rad/sec.
         imu_msg.angular_velocity.x = float(gg.x) / gyro_scale * SENSORS_DPS_TO_RADS;
         imu_msg.angular_velocity.y = float(gg.y) / gyro_scale * SENSORS_DPS_TO_RADS;
