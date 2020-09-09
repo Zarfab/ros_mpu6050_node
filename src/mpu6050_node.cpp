@@ -27,7 +27,9 @@
 
 #define MPU_FRAMEID "base_imu"
 
-#define SENSORS_DPS_TO_RADS               (0.017453293F)          /**< Degrees/s to rad/s multiplier */
+#define SENSORS_G_TO_MS2                  (9.80665F)              // g's to m/s^2 multiplier
+#define SENSORS_DPS_TO_RADS               (0.017453293F)          // Degrees/s to rad/s multiplier
+
 
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
@@ -55,6 +57,17 @@ std::string frame_id;
 
 // mpu offsets
 int ax, ay, az, gx, gy, gz;
+
+// float accel_scale = 1;
+// if (accel_range == MPU6050_RANGE_16_G)
+// accel_scale = 2048;
+// if (accel_range == MPU6050_RANGE_8_G)
+// accel_scale = 4096;
+// if (accel_range == MPU6050_RANGE_4_G)
+// accel_scale = 8192;
+// if (accel_range == MPU6050_RANGE_2_G)
+// accel_scale = 16384;
+float accel_scale = 16384;
 
 // float gyro_scale = 1;
 // if (gyro_range == MPU6050_RANGE_250_DEG)
@@ -156,9 +169,9 @@ void loop(ros::NodeHandle pn, ros::NodeHandle n) {
 		// Accelerations should be in m/s^2 (not in g's), and rotational velocity should be in rad/sec
         // see also https://answers.ros.org/question/200480/imu-message-definition/
         mpu.dmpGetAccel(&aa, fifoBuffer);
-        imu_msg.linear_acceleration.x = aa.x * 1/16384. * 9.80665;
-        imu_msg.linear_acceleration.y = aa.y * 1/16384. * 9.80665;
-        imu_msg.linear_acceleration.z = aa.z * 1/16384. * 9.80665;
+        imu_msg.linear_acceleration.x = aa.x / accel_scale * SENSORS_G_TO_MS2;
+        imu_msg.linear_acceleration.y = aa.y / accel_scale * SENSORS_G_TO_MS2;
+        imu_msg.linear_acceleration.z = aa.z / accel_scale * SENSORS_G_TO_MS2;
 
         if(debug) printf("areal (raw) %6d %6d %6d    ", aa.x, aa.y, aa.z);
         if(debug) printf("areal (m/s^2) %6d %6d %6d    ", imu_msg.linear_acceleration.x, imu_msg.linear_acceleration.y, imu_msg.linear_acceleration.z);
