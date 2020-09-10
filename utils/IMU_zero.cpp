@@ -163,9 +163,11 @@ void Initialize()
 
 	// verify connection
 	printf("Testing device connections...\n");
-	if(!accelgyro.testConnection()) {
+	if(!accelgyro.testConnection()) 
+	{
 		printf("MPU6050 connection failed\n");
 		return;
+	}
 
 	printf("MPU6050 connection successful\n"); 
 	accelgyro.initialize();
