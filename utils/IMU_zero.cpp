@@ -166,43 +166,6 @@ void Initialize()
 	// verify connection
 	printf("Testing device connections...\n");
 	printf(accelgyro.testConnection() ? "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
-	printf("PID tuning Each Dot = 100 readings\n");
-	/*A tidbit on how PID (PI actually) tuning works. 
-	When we change the offset in the MPU6050 we can get instant results. This allows us to use Proportional and 
-	integral of the PID to discover the ideal offsets. Integral is the key to discovering these offsets, Integral 
-	uses the error from set-point (set-point is zero), it takes a fraction of this error (error * ki) and adds it 
-	to the integral value. Each reading narrows the error down to the desired offset. The greater the error from 
-	set-point, the more we adjust the integral value. The proportional does its part by hiding the noise from the 
-	integral math. The Derivative is not used because of the noise and because the sensor is stationary. With the 
-	noise removed the integral value lands on a solid offset after just 600 readings. At the end of each set of 100 
-	readings, the integral value is used for the actual offsets and the last proportional reading is ignored due to 
-	the fact it reacts to any noise.
-	*/
-	accelgyro.CalibrateAccel(6);
-	accelgyro.CalibrateGyro(6);
-	printf("\nat 600 Readings\n");
-	accelgyro.PrintActiveOffsets();
-	printf();
-	accelgyro.CalibrateAccel(1);
-	accelgyro.CalibrateGyro(1);
-	printf("700 Total Readings\n");
-	accelgyro.PrintActiveOffsets();
-	printf();
-	accelgyro.CalibrateAccel(1);
-	accelgyro.CalibrateGyro(1);
-	printf("800 Total Readings\n");
-	accelgyro.PrintActiveOffsets();
-	printf();
-	accelgyro.CalibrateAccel(1);
-	accelgyro.CalibrateGyro(1);
-	printf("900 Total Readings\n");
-	accelgyro.PrintActiveOffsets();
-	printf();    
-	accelgyro.CalibrateAccel(1);
-	accelgyro.CalibrateGyro(1);
-	printf("1000 Total Readings\n");
-	accelgyro.PrintActiveOffsets();
-	printf("\n\n Any of the above offsets will work nice \n\n Lets proof the PID tuning using another method:\n"); 
 } // Initialize
 
 void SetOffsets(int TheOffsets[6])
