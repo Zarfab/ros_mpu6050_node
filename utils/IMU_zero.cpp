@@ -1,5 +1,5 @@
 /*
-I2Cdev library collection - MPU6050 RPi example
+I2Cdev library collection - MPU6050 RPi calibration program
 Based on the example in Arduino/MPU6050/
 
 ==============================================
