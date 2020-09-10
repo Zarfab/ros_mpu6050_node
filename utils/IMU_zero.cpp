@@ -75,7 +75,7 @@ and so on.
 #include <stdio.h>
 #include <cstdio>
 #include <bcm2835.h>
-#include <wiringPi.h> // needed for delays , can be installed with 'sudo apt-get install wiringpi' see http://wiringpi.com/
+//#include <wiringPi.h> // needed for delays , can be installed with 'sudo apt-get install wiringpi' see http://wiringpi.com/
 #include "I2Cdev.h"
 #include "MPU6050.h"
 #include <math.h>
@@ -158,7 +158,7 @@ void GetSmoothed()
 
 void Initialize()
 {
-	wiringPiSetupSys();
+	//wiringPiSetupSys();
 	// initialize device
 	printf("Initializing I2C devices...\n");
 	accelgyro.initialize();
