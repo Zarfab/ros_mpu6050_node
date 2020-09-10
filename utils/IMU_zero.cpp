@@ -205,11 +205,11 @@ void ShowProgress()
 
 void PullBracketsIn()
 { 
-	boolean AllBracketsNarrow;
-	boolean StillWorking;
+	bool AllBracketsNarrow;
+	bool StillWorking;
 	int NewOffset[6];
 
-	prinf("\nclosing in:\n");
+	printf("\nclosing in:\n");
 	AllBracketsNarrow = false;
 	ForceHeader();
 	StillWorking = true;
@@ -265,7 +265,7 @@ void PullBracketsIn()
 
 void PullBracketsOut()
 { 
-	boolean Done = false;
+	bool Done = false;
 	int NextLowOffset[6];
 	int NextHighOffset[6];
 
