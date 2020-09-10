@@ -12,14 +12,14 @@ First install [I2Cdevlib](https://github.com/jrowberg/i2cdevlib):
     cd /usr/share/arduino/libraries
     sudo git clone https://github.com/chrisspen/i2cdevlib.git
 
-Note the fork should be used for now, since jrowberg's i2cdevlib has several outstanding bugs and is unmaintained.
+*Note the fork should be used, since jrowberg's i2cdevlib is way ahead and use too much Arduino specific code to compile on Raspberry Pi*
 
 Then install [Bcm2835](http://www.airspayce.com/mikem/bcm2835/index.html):
 
     cd /tmp
-    wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.50.tar.gz
-    tar zxvf bcm2835-1.50.tar.gz
-    cd bcm2835-1.50
+    wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.68.tar.gz
+    tar zxvf bcm2835-1.68.tar.gz
+    cd bcm2835-1.68
     ./configure
     make
     make check
@@ -27,7 +27,7 @@ Then install [Bcm2835](http://www.airspayce.com/mikem/bcm2835/index.html):
     
 Then clone the project into your ROS workspace via:
 
-    git clone https://github.com/chrisspen/ros_mpu6050_node.git
+    git clone https://github.com/Zarfab/ros_mpu6050_node.git
     
 And then compile it:
 
@@ -43,10 +43,3 @@ Since the Raspbian kernel and BCM2835 driver restrict I2C access to only the roo
 Assuming the device is properly wired, it should report "DMP ready!". Now you should be able to see the IMU stream with:
 
     rostopic echo /imu/data
-
-Similar Projects
-----------------
-
-    https://github.com/brNX/ros_mpu6050_node
-    
-    https://github.com/matpalm/ros-mpu6050-node
