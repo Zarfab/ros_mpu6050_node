@@ -168,6 +168,12 @@ void Initialize()
 	printf(accelgyro.testConnection() ? "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
 } // Initialize
 
+void SetAveraging(int NewN)
+{ 
+	N = NewN;
+	printf("averaging %d  readings each time\n", N);
+} // SetAveraging
+
 void SetOffsets(int TheOffsets[6])
 { 
 	accelgyro.setXAccelOffset(TheOffsets [iAx]);
@@ -316,12 +322,6 @@ void PullBracketsOut()
 		}
 	} // keep going
 } // PullBracketsOut
-
-void SetAveraging(int NewN)
-{ 
-	N = NewN;
-	printf("averaging %d  readings each time\n", N);
-} // SetAveraging
 
 
 
