@@ -70,7 +70,7 @@ To compile on a Raspberry Pi (tested on Rpi 3B with raspios buster - 2020-08-20)
 
     cd utils/
     PATH_I2CDEVLIB=/usr/share/arduino/libraries/i2cdevlib/
-    gcc -o IMU_zero IMU_zero.cpp \
+    sudo gcc -o IMU_zero IMU_zero.cpp \
          -I ${PATH_I2CDEVLIB}RaspberryPi_bcm2835/I2Cdev ${PATH_I2CDEVLIB}RaspberryPi_bcm2835/I2Cdev/I2Cdev.cpp \
          -I ${PATH_I2CDEVLIB}Arduino/MPU6050/ ${PATH_I2CDEVLIB}Arduino/MPU6050/MPU6050.cpp -l bcm2835 -l m
 
